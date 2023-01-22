@@ -1,0 +1,168 @@
+#Libraries(found in lib)
+import os
+import time
+import displayio
+import terminalio
+from adafruit_display_shapes.rect import Rect
+from adafruit_display_text import label
+from adafruit_macropad import MacroPad
+import traceback
+
+
+MACRO_FOLDER = '/macros'
+
+# CLASSES AND FUNCTIONS 
+
+class App:  #Each macro is represented as an 'App', stored in a dictionary with 2 values: Name and Macros
+    
+    def __init__(self, appdata):  
+        self.title = appdata['title']
+        self.macros = appdata['macros']
+
+    def switch(self):
+        #Activate application settings
+           
+        group[13].text = self.title   # Application name
+        for i in range(12):
+            if i < len(self.macros): # Key in use, set label + LED color
+                macropad.pixels[i] = self.macros[i][0]
+                group[i].text = self.macros[i][1]
+            else:  # Key not in use, no label or LED
+                macropad.pixels[i] = 0
+                group[i].text = ''
+        macropad.keyboard.release_all()
+        macropad.consumer_control.release()
+        macropad.mouse.release_all()
+        macropad.stop_tone()
+        macropad.pixels.show()
+        macropad.display.refresh()
+
+
+# INITIALIZATION -----------------------
+
+macropad = MacroPad()
+macropad.display.auto_refresh = False
+macropad.pixels.auto_write = False
+
+# Set up disp;ay
+group = displayio.Group()
+for key_index in range(12):
+    x = key_index % 3
+    y = key_index // 3
+    group.append(label.Label(terminalio.FONT, text='', color=0xFFFFFF, anchored_position=((macropad.display.width - 1) * x / 2,macropad.display.height - 1 -(3 - y) * 12),anchor_point=(x / 2, 1.0)))
+group.append(Rect(0, 0, macropad.display.width, 12, fill=0xFFF000))
+
+group.append(label.Label(terminalio.FONT, text='', color=0x000000,
+                         anchored_position=(macropad.display.width//2, -2),
+                         anchor_point=(0.5, 0.0)))
+
+#group.append(Rect(0, 0.5, macropad.display.width, 12, fill=0xFFFFFF))
+
+macropad.display.show(group)
+
+# Load all the macros from .py files in MACRO_FOLDER
+apps = []
+files = os.listdir(MACRO_FOLDER)
+files.sort()
+for filename in files:
+    if filename.endswith('.py') and not filename.startswith('._'):
+        try:
+            module = __import__(MACRO_FOLDER + '/' + filename[:-3])
+            apps.append(App(module.app))
+        except (SyntaxError, ImportError, AttributeError, KeyError, NameError,
+                IndexError, TypeError) as err:
+            print("ERROR in", filename)
+            traceback.print_exception(err, err, err.__traceback__)
+
+if not apps:
+    group[13].text = 'NO MACRO FILES FOUND'
+    macropad.display.refresh()
+    while True:
+        pass
+
+last_pos = None
+last_encoder_switch = macropad.encoder_switch_debounced.pressed
+app_index = 0
+apps[app_index].switch()
+
+
+# MAIN  This shit is confusing as hell
+
+while True:
+    # Read encoder position
+    pos = macropad.encoder
+    if pos != last_pos:
+        app_index = pos % len(apps)
+        apps[app_index].switch()
+        last_pos = pos
+
+    macropad.encoder_switch_debounced.update()
+    encoder_switch = macropad.encoder_switch_debounced.pressed
+    if encoder_switch != last_encoder_switch:
+        last_encoder_switch = encoder_switch
+        if len(apps[app_index].macros) < 13:
+            continue    # No 13th macro, just resume main loop
+        key_number = 12 # else process below as 13th macro
+        pressed = encoder_switch
+    else:
+        event = macropad.keys.events.get()
+        if not event or event.key_number >= len(apps[app_index].macros):
+            continue # No key events, or no corresponding macro, resume loop
+        key_number = event.key_number
+        pressed = event.pressed
+
+    sequence = apps[app_index].macros[key_number][2]
+    if pressed:
+        
+        if key_number < 12: # No pixel for encoder button
+            macropad.pixels[key_number] = 0xFFFFFF
+            macropad.pixels.show()
+        for item in sequence:
+            if isinstance(item, int):
+                if item >= 0:
+                    macropad.keyboard.press(item)
+                else:
+                    macropad.keyboard.release(-item)
+            elif isinstance(item, float):
+                time.sleep(item)
+            elif isinstance(item, str):
+                macropad.keyboard_layout.write(item)
+            elif isinstance(item, list):
+                for code in item:
+                    if isinstance(code, int):
+                        macropad.consumer_control.release()
+                        macropad.consumer_control.press(code)
+                    if isinstance(code, float):
+                        time.sleep(code)
+            elif isinstance(item, dict):
+                if 'buttons' in item:
+                    if item['buttons'] >= 0:
+                        macropad.mouse.press(item['buttons'])
+                    else:
+                        macropad.mouse.release(-item['buttons'])
+                macropad.mouse.move(item['x'] if 'x' in item else 0,
+                                    item['y'] if 'y' in item else 0,
+                                    item['wheel'] if 'wheel' in item else 0)
+                if 'tone' in item:
+                    if item['tone'] > 0:
+                        macropad.stop_tone()
+                        macropad.start_tone(item['tone'])
+                    else:
+                        macropad.stop_tone()
+                elif 'play' in item:
+                    macropad.play_file(item['play'])
+    else:
+        for item in sequence:
+            if isinstance(item, int):
+                if item >= 0:
+                    macropad.keyboard.release(item)
+            elif isinstance(item, dict):
+                if 'buttons' in item:
+                    if item['buttons'] >= 0:
+                        macropad.mouse.release(item['buttons'])
+                elif 'tone' in item:
+                    macropad.stop_tone()
+        macropad.consumer_control.release()
+        if key_number < 12: # No pixel for encoder button
+            macropad.pixels[key_number] = apps[app_index].macros[key_number][0]
+            macropad.pixels.show()
