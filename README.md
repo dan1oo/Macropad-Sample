@@ -2,7 +2,7 @@
 
 # Overview
 
-This is a sample Circuitpython program that I worked on to setup a 12 button module with a digital encoder and LCD screen.
+This is a sample Circuitpython program that I worked on in high school to setup a 12 button module with a digital encoder and LCD screen.
 
 # File Organization
 
