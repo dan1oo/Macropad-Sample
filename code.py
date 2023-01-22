@@ -27,7 +27,7 @@ for key_index in range(12): #arrange labels for 12 keys
 group.append(Rect(0, 0, macropad.display.width, 12, fill=0xFFF000))
 macropad.display.show(group)
 
-# Load all the macros from .py files in MACRO_FOLDER
+# Load all the macros from .py files in FOLDER
 apps = []
 files = os.listdir(MACRO_FOLDER)
 files.sort()
@@ -109,7 +109,7 @@ while True:
     sequence = apps[app_index].macros[key_number][2]
     if pressed:           # If keys are pressed
         
-        if key_number < 12: 
+        if key_number < 12:             #Main keys(non encoder)
             macropad.pixels[key_number] = 0xFFFFFF
             macropad.pixels.show()
         for item in sequence:
