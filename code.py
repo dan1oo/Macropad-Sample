@@ -75,7 +75,8 @@ class App:  #Each macro is represented as an 'App', stored in a dictionary with 
 
 
 
-# MAIN  This shit is confusing as hell
+# MAIN  Very confusing
+
 
 last_pos = None
 last_encoder_switch = macropad.encoder_switch_debounced.pressed
