@@ -11,31 +11,6 @@ import traceback
 
 MACRO_FOLDER = '/macros'
 
-# CLASS
-
-class App:  #Each macro is represented as an 'App', stored in a dictionary with 2 values: Name and Macros
-    
-    def __init__(self, appdata):  
-        self.title = appdata['title']
-        self.macros = appdata['macros']
-
-    def switch(self):
-        #Activate application settings
-           
-        group[13].text = self.title   # Application name
-        for i in range(12):
-            if i < len(self.macros): # Key in use, set label + LED color
-                macropad.pixels[i] = self.macros[i][0]
-                group[i].text = self.macros[i][1]
-            else:  # Key not in use, no label or LED
-                macropad.pixels[i] = 0
-                group[i].text = ''
-        macropad.keyboard.release_all()
-        macropad.consumer_control.release()
-        macropad.mouse.release_all()
-        macropad.stop_tone()
-        macropad.pixels.show()
-        macropad.display.refresh()
 
 
 # DISPLAY
@@ -73,6 +48,31 @@ if not apps:
         pass
 
 
+# CLASS
+
+class App:  #Each macro is represented as an 'App', stored in a dictionary with 2 values: Name and Macros
+    
+    def __init__(self, appdata):  
+        self.title = appdata['title']
+        self.macros = appdata['macros']
+
+    def switch(self):
+        #Activate application settings
+           
+        group[13].text = self.title   # Application name
+        for i in range(12):
+            if i < len(self.macros): # Key in use, set label + LED color
+                macropad.pixels[i] = self.macros[i][0]
+                group[i].text = self.macros[i][1]
+            else:  # Key not in use, no label or LED
+                macropad.pixels[i] = 0
+                group[i].text = ''
+        macropad.keyboard.release_all()
+        macropad.consumer_control.release()
+        macropad.mouse.release_all()
+        macropad.stop_tone()
+        macropad.pixels.show()
+        macropad.display.refresh()
 
 
 
