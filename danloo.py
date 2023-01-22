@@ -1,11 +1,8 @@
 from adafruit_hid.keycode import Keycode # REQUIRED if using Keycode.* values
 from adafruit_hid.consumer_control_code import ConsumerControlCode
 
-app = {                # REQUIRED dict, must be named 'app'
-    'title' : 'Danlooo', # Application name
-    'macros' : [       # List of button macros...
-        # COLOR    LABEL    KEY SEQUENCE
-        # 1st row ----------
+app = {'title' : 'Danlooo', # Application name
+    'macros' : [
         (0x9e0129, 'Console', [',']),
         (0x9e0129, 'Clip', ([Keycode.ALT,'1'])),
         (0x9e0129, 'Mute', ['`']),
@@ -21,7 +18,7 @@ app = {                # REQUIRED dict, must be named 'app'
         (0x9e0129,  '<<', [[ConsumerControlCode.SCAN_PREVIOUS_TRACK]]),
         (0x9e0129, 'Play/Pause', [[ConsumerControlCode.PLAY_PAUSE]]),
         (0x9e0129, '>>', [[ConsumerControlCode.SCAN_NEXT_TRACK]]),
-        # Encoder button ---
+     
         (0x9e0129, '', [Keycode.BACKSPACE])
     ]
 }
