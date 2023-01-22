@@ -12,7 +12,6 @@ import traceback
 MACRO_FOLDER = '/macros'
 
 
-
 # DISPLAY
 
 macropad = MacroPad()
@@ -107,9 +106,9 @@ while True:
         pressed = event.pressed
 
     sequence = apps[app_index].macros[key_number][2]
-    if pressed:
+    if pressed:           # If keys are pressed
         
-        if key_number < 12: # No pixel for encoder button
+        if key_number < 12: 
             macropad.pixels[key_number] = 0xFFFFFF
             macropad.pixels.show()
         for item in sequence:
