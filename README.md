@@ -2,7 +2,7 @@
 
 # Overview
 
-This is a sample Circuitpython program that I worked on in high school to setup a 12 button module with a digital encoder and LCD screen. This program is a very standard macropad setup using circuitpy.
+This is a sample Circuitpython program that I worked on in high school to setup a 12 button module with a digital encoder and LCD screen. This program is based off a very standard adafruit macropad setup using circuitpy.
 
 # File Organization
 
