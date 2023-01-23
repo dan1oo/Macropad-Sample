@@ -8,11 +8,55 @@ from adafruit_display_text import label
 from adafruit_macropad import MacroPad
 import traceback
 MACRO_FOLDER = '/macros'
+macropad = MacroPad()
 
+# CLASS
+class Layout:  #Each macro is represented as an 'App', stored in a dictionary with 2 values: Name and Macros
+    def __init__(self, macro):  
+        self.title = macro['title']
+        self.macros = macro['macros']
+        self.order = macro['order']
+    def active(self):
+        macropad.keyboard.release_all()
+        macropad.consumer_control.release()
+        macropad.mouse.release_all()
+        macropad.stop_tone()
+        macropad.pixels.show()
+        macropad.display.refresh()
+    def switch(self):
+        #Activate application settings
+        group[13].text = self.title   # Application name
+        for i in range(12):
+            if i < len(self.macros): # Key in use, set label + LED color
+                macropad.pixels[i] = self.macros[i][0]
+                group[i].text = self.macros[i][1]
+            else:  # Key not in use, no label or LED
+                macropad.pixels[i] = 0
+                group[i].text = ''
 
+# Load all the macros from .py files in FOLDER
+apps = []
+files = os.listdir(MACRO_FOLDER)
+files.sort()
+for filename in files:
+    if filename.endswith('.py') and not filename.startswith('._'):
+        try:
+            module = __import__(MACRO_FOLDER + '/' + filename[:-3])
+            apps.append(App(module.Layout))
+        except (SyntaxError, ImportError, AttributeError, KeyError, NameError,
+                IndexError, TypeError) as err:
+            print("ERROR in", filename)
+            traceback.print_exception(err, err, err.__traceback__)
+if not apps:
+    group[13].text = 'NO MACRO FILES FOUND'
+    macropad.display.refresh()
+    while True:
+        pass
+        
+        
 # DISPLAY
 
-macropad = MacroPad()
+
 macropad.display.auto_refresh = False
 macropad.pixels.auto_write = False
 
@@ -23,53 +67,6 @@ for i in range(12): #arrange labels for 12 keys
 group.append(Rect(0, 0, macropad.display.width, 12, fill=0xFFF000))
 group.append(Rect(0,14,macropad.displaywidth, 26, fill = 0xFFF000))
 macropad.display.show(group)
-
-# Load all the macros from .py files in FOLDER
-apps = []
-files = os.listdir(MACRO_FOLDER)
-files.sort()
-for filename in files:
-    if filename.endswith('.py') and not filename.startswith('._'):
-        try:
-            module = __import__(MACRO_FOLDER + '/' + filename[:-3])
-            apps.append(App(module.app))
-        except (SyntaxError, ImportError, AttributeError, KeyError, NameError,
-                IndexError, TypeError) as err:
-            print("ERROR in", filename)
-            traceback.print_exception(err, err, err.__traceback__)
-if not apps:
-    group[13].text = 'NO MACRO FILES FOUND'
-    macropad.display.refresh()
-    while True:
-        pass
-
-
-# CLASS
-
-class App:  #Each macro is represented as an 'App', stored in a dictionary with 2 values: Name and Macros
-    
-    def __init__(self, appdata):  
-        self.title = appdata['title']
-        self.macros = appdata['macros']
-
-    def switch(self):
-        #Activate application settings
-           
-        group[13].text = self.title   # Application name
-        for i in range(12):
-            if i < len(self.macros): # Key in use, set label + LED color
-                macropad.pixels[i] = self.macros[i][0]
-                group[i].text = self.macros[i][1]
-            else:  # Key not in use, no label or LED
-                macropad.pixels[i] = 0
-                group[i].text = ''
-        macropad.keyboard.release_all()
-        macropad.consumer_control.release()
-        macropad.mouse.release_all()
-        macropad.stop_tone()
-        macropad.pixels.show()
-        macropad.display.refresh()
-
 
 
 # MAIN  Very confusing
