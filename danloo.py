@@ -1,7 +1,7 @@
 from adafruit_hid.keycode import Keycode 
 from adafruit_hid.consumer_control_code import ConsumerControlCode
 
-app = {'title' : 'Danlooo', # Application name
+layout = {'title' : 'Danlooo', # Application name
         'macros' : [ #Each row corresponds to respective row and keys on the hardware
                      #Consumer control codes control media commands, Keycodes control nonstring keys.
        
@@ -14,5 +14,5 @@ app = {'title' : 'Danlooo', # Application name
         (0x9e0129,  '<<', [[ConsumerControlCode.SCAN_PREVIOUS_TRACK]]),(0x9e0129, 'Play/Pause', [[ConsumerControlCode.PLAY_PAUSE]]),(0x9e0129, '>>', [[ConsumerControlCode.SCAN_NEXT_TRACK]]),
         # Digital Encoder
         (0x9e0129, '', [Keycode.BACKSPACE])
-    ]
+    ], 'order' : 1
 }
