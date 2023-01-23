@@ -61,11 +61,10 @@ group.append(Rect(0, 0, macropad.display.width, 12, fill=0xFFF000))
 macropad.display.show(group)
 
 
-# MAIN  Very confusing-follow along as best as u can
+# MAIN  Much of this section was taken from common repos as a main loop for determining when buttons are pressed.
 
 
-last_pos = None
-last_encoder_switch = macropad.encoder_switch_debounced.pressed
+last_pos = macros[app_index].order
 app_index = 0
 macros[app_index].switch()
 
@@ -91,7 +90,7 @@ while True:
             continue # No key events, or no corresponding macro, resume loop
         key_number = event.key_number
         pressed = event.pressed
-
+    #Continue if key has been pressed
     sequence = macros[app_index].macros[key_number][2]
     if pressed:           # If keys are pressed
         
@@ -121,18 +120,5 @@ while True:
                         macropad.mouse.press(item['buttons'])
                     else:
                         macropad.mouse.release(-item['buttons'])
-    else:
-        for item in sequence:
-            if isinstance(item, int):
-                if item >= 0:
-                    macropad.keyboard.release(item)
-            elif isinstance(item, dict):
-                if 'buttons' in item:
-                    if item['buttons'] >= 0:
-                        macropad.mouse.release(item['buttons'])
-                elif 'tone' in item:
-                    macropad.stop_tone()
-        macropad.consumer_control.release()
-        if key_number < 12: # No pixel for encoder button
-            macropad.pixels[key_number] = macros[app_index].macros[key_number][0]
-            macropad.pixels.show()
+    else: #release keys
+        macropad.release_all()
