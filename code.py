@@ -9,9 +9,11 @@ from adafruit_macropad import MacroPad
 import traceback
 MACRO_FOLDER = '/macros'
 macropad = MacroPad()
+macropad.display.auto_refresh = False
+macropad.pixels.auto_write = False
 
 # CLASS
-class Layout:  #Each macro is represented as an 'App', stored in a dictionary with 2 values: Name and Macros
+class Layout:  #Each macro is represented as an 'App', stored in a dictionary with 3 values: Name, Macro, and Order
     def __init__(self, macro):  
         self.title = macro['title']
         self.macros = macro['macros']
@@ -35,72 +37,62 @@ class Layout:  #Each macro is represented as an 'App', stored in a dictionary wi
                 group[i].text = ''
 
 # Load all the macros from .py files in FOLDER
-apps = []
+macros = []
 files = os.listdir(MACRO_FOLDER)
 files.sort()
-for filename in files:
-    if filename.endswith('.py') and not filename.startswith('._'):
+for i in files:
+    if i.endswith('.py') and not i.startswith('._'): #Make sure it is a valid .py file
         try:
-            module = __import__(MACRO_FOLDER + '/' + filename[:-3])
-            apps.append(App(module.Layout))
+            module = __import__(MACRO_FOLDER + '/' + i[:-3])
+            macros.append(Layout(module.Layout))
         except (SyntaxError, ImportError, AttributeError, KeyError, NameError,
                 IndexError, TypeError) as err:
             print("ERROR in", filename)
-            traceback.print_exception(err, err, err.__traceback__)
-if not apps:
-    group[13].text = 'NO MACRO FILES FOUND'
-    macropad.display.refresh()
-    while True:
-        pass
-        
-        
+else:
+    pass
+
 # DISPLAY
-
-
-macropad.display.auto_refresh = False
-macropad.pixels.auto_write = False
-
-# Set up disp;ay
+# Set up display as Group() - append group with each display element - 12 label keys and 13 rectangles, similar to regular python display library
 group = displayio.Group()
 for i in range(12): #arrange labels for 12 keys
     group.append(label.Label(terminalio.FONT, text='', color=0xFFFFFF, anchored_position=((macropad.display.width - 1) * (i%3) / 2,macropad.display.height - 1 -(3 - (i//3)) * 12),anchor_point=((i%3) / 2, 1.0)))
+    group.append(Rect((macropad.display.width - 1) * (i%3) / 2,macropad.display.height - 1 -(3 - (i//3)) * 12),anchor_point=((i%3) / 2, 1.0)), fill=0xFFFFFF))
 group.append(Rect(0, 0, macropad.display.width, 12, fill=0xFFF000))
-group.append(Rect(0,14,macropad.displaywidth, 26, fill = 0xFFF000))
 macropad.display.show(group)
 
 
-# MAIN  Very confusing
+# MAIN  Very confusing-follow along as best as u can
 
 
 last_pos = None
 last_encoder_switch = macropad.encoder_switch_debounced.pressed
 app_index = 0
-apps[app_index].switch()
+macros[app_index].switch()
 
 while True:
-    # Read encoder position
+    # Read encoder position and determine whether to switch layouts
     pos = macropad.encoder
     if pos != last_pos:
-        app_index = pos % len(apps)
-        apps[app_index].switch()
+        app_index = pos % len(macros)
+        macros[app_index].switch()
         last_pos = pos
 
     macropad.encoder_switch_debounced.update()
     encoder_switch = macropad.encoder_switch_debounced.pressed
     if encoder_switch != last_encoder_switch:
         last_encoder_switch = encoder_switch
-        if len(apps[app_index].macros) < 13:
+        if len(macros[app_index].macros) < 13:
             continue    # No 13th macro, just resume main loop
         key_number = 12 # else process below as 13th macro
         pressed = encoder_switch
     else:
         event = macropad.keys.events.get()
-        if not event or event.key_number >= len(apps[app_index].macros):
+        if not event or event.key_number >= len(macros[app_index].macros):
             continue # No key events, or no corresponding macro, resume loop
         key_number = event.key_number
         pressed = event.pressed
 
-    sequence = apps[app_index].macros[key_number][2]
+    sequence = macros[app_index].macros[key_number][2]
     if pressed:           # If keys are pressed
         
         if key_number < 12:             #Main keys(non encoder)
@@ -142,5 +134,5 @@ while True:
                     macropad.stop_tone()
         macropad.consumer_control.release()
         if key_number < 12: # No pixel for encoder button
-            macropad.pixels[key_number] = apps[app_index].macros[key_number][0]
+            macropad.pixels[key_number] = macros[app_index].macros[key_number][0]
             macropad.pixels.show()
